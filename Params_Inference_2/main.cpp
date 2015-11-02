@@ -27,6 +27,7 @@
 #include "adept_source.h"
 #include "aVfun.h"
 #include <omp.h>
+//#include "timer.hpp" // On UNIX
 using namespace std;
 using adept::adouble;
 
@@ -171,7 +172,8 @@ int main()
 
 	// **************  HMC parameters *************** //
 	const int nsample_burnin = 0;         // Number of points in the MCMC
-	int nsample_eff = 10000;
+	int nsample_eff = 20000;
+	size_t num_threads = 2;
 	int nsample = nsample_eff + nsample_burnin;
 
 	const double dtau = 0.25;  // MD time step
@@ -309,6 +311,9 @@ int main()
 
 	std::cout << "\nStarting HMC loops (burn-in)...\n---------------------------------\n";
 	clock_t tinit = clock();
+	// On UNIX:
+	// timer tinit;
+	// tinit.start();
 
 	for (int counter = 1; counter <= nsample_burnin; ++counter)
 		std::cout << "\nHMC loops here ... to be implemented ...\n";
@@ -341,15 +346,13 @@ int main()
 	int reject_counter = 0;
 	std::cout << "\nStarting effective HMC loops...\n---------------------------------\n";
 	
-	size_t num_threads = 4;
-
 	if ((nsample_eff%num_threads) != 0)
 	{
 		
 		std::cout << "\nMC iterations " << nsample_eff
-			<< "not compatible with number of threads " << num_threads << endl;
+			<< " not compatible with number of threads " << num_threads << endl;
 
-		nsample_eff = 4 * round((double)nsample_eff / num_threads);
+		nsample_eff = num_threads * round((double)nsample_eff / num_threads);
 
 		std::cout << "Parameter nsample_eff will be set to " << nsample_eff << endl;
 
@@ -371,6 +374,10 @@ int main()
 
 	#pragma omp parallel num_threads(num_threads)
 	{
+		#pragma omp master
+		{
+			std::cout << "Activated threads: " << omp_get_num_threads() << endl;
+		}
 		// **************  Init thread-local vector container for normal random numbers  *************** //
 		vector<double> randvec(nparams + N);
 
@@ -406,7 +413,7 @@ int main()
 		std::function <double()> urand = std::bind(uniform_real_distribution<>(0, 1), std::ref(engine));
 
 		#pragma omp flush(abort)
-
+		// timer t0; t0.start();
 		for (int counter = (nsample_burnin + 1); counter <= nsample; ++counter)
 		{
 			if (!abort)
@@ -439,6 +446,8 @@ int main()
 
 				// MD Integration:
 				clock_t t1 = clock();
+				// timer t1; t1.start();
+
 				for (int counter_napa = 1; counter_napa <= n_napa; ++counter_napa)
 				{
 					napa(local_theta, local_u, p, mp, bq, lnr_der, counter, n, j, N, nparams, sigma, T, dt, dtau, m_stg, m_bdy,
@@ -448,6 +457,8 @@ int main()
 				#pragma omp master
 				{
 					time_respa[counter - nsample_burnin - 1] = ((float)(clock() - t1) / CLOCKS_PER_SEC);
+					// t1.stop();
+					// time_respa[counter - nsample_burnin - 1] = t1.get_timing();
 				}
 
 				// Calculate energy of proposal state => Metropolis accept/reject
@@ -484,11 +495,16 @@ int main()
 				local_theta_sample.push_back(local_theta);
 				local_u_sample.push_back(local_u);
 
-				#pragma omp master
+				#pragma omp critical (output)
 				{
 					if (counter % 1000 == 0)
+					{
+						// t0.stop();
 						std::cout << "\n" << counter << " loops in thread " << omp_get_thread_num() << " completed in "
-						<< ((float)(clock() - tinit) / CLOCKS_PER_SEC) << " seconds\n";
+							<< ((float)(clock() - tinit) / CLOCKS_PER_SEC) << " seconds\n";
+						//  << t0.get_timing() << " seconds\n";
+					}
+						
 				}
 			}  // end of if(!abort)
 		}  // end of for loop
@@ -523,7 +539,10 @@ int main()
 	// **********************  End of HMC loops  *********************** //
 	// ***************************************************************** //
 	std::cout << "\n\n";
+	std::cout << "Number of active threads: " << num_threads << endl;
 	std::cout << "Run completed in " << ((float)(clock()-tinit)/CLOCKS_PER_SEC) << " seconds\n";
+	// tinit.stop();
+	// std::cout << "Run completed in " << tinit.get_timing() << " seconds\n";
 	std::cout << "NAPA cycles in " << vsum(time_respa) << " seconds\n";
 	std::cout << "Slow NAPA in " << vsum(time_respa_s) << " seconds\n";
 	std::cout << "Fast NAPA in " << vsum(time_respa_f) << " seconds\n"; 

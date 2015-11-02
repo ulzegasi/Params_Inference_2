@@ -10,7 +10,7 @@ sigma	0.1
 K	200
 gam	0.5
 nsample_burnin	0
-nsample_eff	10000
+nsample_eff	20000
 m_bdy_burnin	10
 m_bdy	680
 m_theta_burnin	1

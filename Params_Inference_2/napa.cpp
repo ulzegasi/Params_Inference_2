@@ -16,6 +16,7 @@
 #include "Vfun.h"
 #include "aVfun.h"
 #include "adept.h"
+// #include "timer.hpp"
 using namespace std;
 
 
@@ -31,6 +32,7 @@ void napa(vector<double> & theta, vector<double> & u, vector<double> & p, vector
 
 	// Fast outer propagator (V_N), step dtau/2 
 	clock_t timef = clock();
+	// timer timef; timef.start();
     for (int s = 1; s <= n; ++s)
 	{
         for (int k = 2; k <=j; ++k)
@@ -45,10 +47,13 @@ void napa(vector<double> & theta, vector<double> & u, vector<double> & p, vector
 	#pragma omp master
 	{
 		time_respa_f[counter - nsample_burnin - 1] += ((float)(clock() - timef) / CLOCKS_PER_SEC);
+		// timef.stop();
+		// time_respa_f[counter - nsample_burnin - 1] += timef.get_timing();
 	}
 
 	// Slow inner propagator (V_n, V_1), step dtau
     clock_t time1 = clock();
+	// timer times; times.start();
 
 	dV_fun(stack, n, j, N, sigma, T, dt, bq, lnr_der, theta, u, x, force_old);
 	// force_old = vtimes(-1.0,force_old);  // NOT NECESSARY: sign changed already in the definition of aV_n_1 
@@ -66,10 +71,13 @@ void napa(vector<double> & theta, vector<double> & u, vector<double> & p, vector
 	#pragma omp master
 	{
 		time_respa_s[counter - nsample_burnin - 1] += ((float)(clock() - time1) / CLOCKS_PER_SEC);
+		// times.stop();
+		// time_respa_s[counter - nsample_burnin - 1] += times.get_timing();
 	}
 	
 	// Again, fast outer propagator (V_N), step dtau/2 
 	timef = clock();
+	// timef.start();
     for (int s = 1; s <= n; ++s)
 	{
         for (int k = 2; k <=j; ++k)
@@ -84,6 +92,8 @@ void napa(vector<double> & theta, vector<double> & u, vector<double> & p, vector
 	#pragma omp master
 	{
 		time_respa_f[counter - nsample_burnin - 1] += ((float)(clock() - timef) / CLOCKS_PER_SEC);
+		// timef.stop();
+		// time_respa_f[counter - nsample_burnin - 1] += timef.get_timing();
 	}
     
 }
