@@ -32,7 +32,7 @@ using namespace std;
 using adept::adouble;
 
 // Useful directories
-const string dir  = "C:/Users/ulzegasi/Cpp/Params_Inference_2/";
+// const string dir  = "C:/Users/ulzegasi/Cpp/Params_Inference_2/";
 const string dir2 = "C:/Users/ulzegasi/Cpp/Params_Inference_2/temp_data/";
 const string dir3 = "C:/Users/ulzegasi/Cpp/Params_Inference_2/input_data/";
 
@@ -172,7 +172,7 @@ int main()
 
 	// **************  HMC parameters *************** //
 	const int nsample_burnin = 0;         // Number of points in the MCMC
-	int nsample_eff = 20000;
+	int nsample_eff = 25000;
 	size_t num_threads = 2;
 	int nsample = nsample_eff + nsample_burnin;
 
@@ -325,8 +325,8 @@ int main()
 	double m_stg_burnin = m_stg;
 	vector<double> m_theta_burnin = m_theta;
 
-	m_bdy = 680.0;       // m = m_q / dt
-	m_stg = 300.0;       // we assume m_q prop. to dt ==> m = costant     
+	m_bdy = 720.0;       // m = m_q / dt
+	m_stg = 320.0;       // we assume m_q prop. to dt ==> m = costant     
 	m_theta[0] = 150.0;  // refers to beta
 	m_theta[1] = 130.0;  // refers to gamma
 
@@ -370,7 +370,7 @@ int main()
 	int abort_counter;
 	int abort_thread;
 
-	size_t seed = 1807201122102013;  // Can be used instead of time(NULL) for reproducibility
+	size_t seed = 18711221013;  // Can be used instead of time(NULL) for reproducibility
 
 	#pragma omp parallel num_threads(num_threads)
 	{
@@ -407,10 +407,12 @@ int main()
 		vector<double> local_u = u;
 
 		// **************  Thread-local RNG  *************** //
-		mt19937_64 engine(time(NULL)*(omp_get_thread_num() + 1));
-		// mt19937_64 engine(seed*(omp_get_thread_num() + 1));
+		// mt19937_64 engine(time(NULL)*(omp_get_thread_num() + 1));
+		mt19937_64 engine(seed*(omp_get_thread_num() + 1));
 		std::function <double()> nrand = std::bind(normal_distribution<>(0, 1), std::ref(engine));
 		std::function <double()> urand = std::bind(uniform_real_distribution<>(0, 1), std::ref(engine));
+
+		int local_reject_counter = 0;
 
 		#pragma omp flush(abort)
 		// timer t0; t0.start();
@@ -470,14 +472,14 @@ int main()
 				{
 					// local_theta = (*theta_save_pt); u = (*u_save_pt);
 					local_theta = theta_save; local_u = u_save;
-					reject_counter += 1;
+					local_reject_counter += 1;
 				}
 				else if (find_if(local_u.begin(), local_u.end(), [&](double el){return (el > 10.0); }) != local_u.end() ||
 					find_if(local_u.begin(), local_u.end(), [&](double el){return (el < -10.0); }) != local_u.end())
 				{
 					// local_theta = (*theta_save_pt); u = (*u_save_pt);
 					local_theta = theta_save; local_u = u_save;
-					reject_counter += 1;
+					local_reject_counter += 1;
 				}
 				else
 				{
@@ -488,7 +490,7 @@ int main()
 					{
 						// local_theta = (*theta_save_pt); u = (*u_save_pt);
 						local_theta = theta_save; local_u = u_save;
-						reject_counter += 1;
+						local_reject_counter += 1;
 					}
 				}
 
@@ -510,7 +512,8 @@ int main()
 		}  // end of for loop
 
 		#pragma omp barrier  // wait for all threads
-		#pragma omp master
+
+		#pragma omp critical (writing_chains)
 		{
 			for (vector< vector<double> >::iterator row_it = local_theta_sample.begin(); 
 				row_it != local_theta_sample.end(); ++row_it)
@@ -524,8 +527,16 @@ int main()
 				u_sample.push_back(*row_it);
 			}
 			
-			energies = local_energies;
-		}
+			for (vector<double>::iterator it = local_energies.begin();
+				it != local_energies.end(); ++it)
+			{
+				energies.push_back(*it);
+			}
+
+			reject_counter += local_reject_counter;
+
+		} // end of critical section (writing chains)
+
 	}
 	// END OF PARALLEL REGION
 	if (abort)
@@ -555,6 +566,7 @@ int main()
 	vector< vector<double> > qs(u_sample.size(), vector<double>(u_sample[0].size()));
 	vector< vector<double> > predy(u_sample.size(), vector<double>(u_sample[0].size()));
 
+	int sample_size = num_threads*nsample_eff;
 
 	/*for (int sample_ind = 0; sample_ind < (nsample+1); ++sample_ind)
 	{
@@ -575,7 +587,7 @@ int main()
 
 	// ABOVE, slow method (cache thrashing?)
 	// BELOW, much faster
-	for (int sample_ind = 0; sample_ind < (nsample + 1); ++sample_ind)
+	for (int sample_ind = 0; sample_ind < (sample_size + 1); ++sample_ind)
 	{
 		for (int s = 1; s <= n; ++s)
 		{
@@ -584,7 +596,7 @@ int main()
 		qs[sample_ind][N - 1] = u_sample[sample_ind][N - 1];
 	}
 
-	for (int sample_ind = 0; sample_ind < (nsample + 1); ++sample_ind)
+	for (int sample_ind = 0; sample_ind < (sample_size + 1); ++sample_ind)
 	{
 		for (int s = n; s > 0; --s)
 		{
@@ -597,7 +609,7 @@ int main()
 		}
 	}
 
-	for (int sample_ind = 0; sample_ind < (nsample+1); ++sample_ind)
+	for (int sample_ind = 0; sample_ind < (sample_size + 1); ++sample_ind)
 	{
 		for (int ind = 0; ind < N; ++ind)
 		{
@@ -618,11 +630,11 @@ int main()
 	// *******************  Parameters ******************** //
 	string param_names[] = {"N", "j", "n", "t[1]", "dt", "nparams", "true_K", "true_gam", "sigma", "K", "gam", 
 	"nsample_burnin", "nsample_eff", "m_bdy_burnin", "m_bdy", "m_theta_burnin", "m_theta_bet", 
-	"m_theta_gam", "m_stg_burnin", "m_stg", "dtau", "n_napa"};
+	"m_theta_gam", "m_stg_burnin", "m_stg", "dtau", "n_napa", "num_threads"};
 
 	double param_values[] = {N, j, n, t[0], dt, nparams, true_K, true_gam, sigma, K, gam, 
 	nsample_burnin, nsample_eff, m_bdy_burnin, m_bdy, m_theta_burnin[0], m_theta[0], m_theta[1], 
-	m_stg_burnin, m_stg, dtau, n_napa};
+	m_stg_burnin, m_stg, dtau, n_napa, num_threads};
 
 	ofstream ofs_params(dir2 + "params" + fname + ".dat");
 	if (! ofs_params)
@@ -669,7 +681,7 @@ int main()
 			ofs_uchains << ind_vec[col] << " ";
 		}
 		ofs_uchains << endl;
-		for (int row = 0; row < nsample + 1; ++row)
+		for (int row = 0; row < sample_size + 1; ++row)
 		{
 			for (int col = 0; col < 4; ++col)
 			{
@@ -681,8 +693,8 @@ int main()
 	ofs_uchains.close();
 
 	// *******************  y chains for spaghetti ******************** //
-	int red_range = min(200,nsample+1);
-	double step = (double)nsample / (red_range - 1);
+	int red_range = min(200,sample_size+1);
+	double step = (double)sample_size / (red_range - 1);
 	vector<int> red_ind;
 	for (int ix = 0; ix < red_range; ++ix)
 		red_ind.push_back((int)(1 + ix*step));
@@ -732,7 +744,7 @@ int main()
 	}
 	else
 	{
-		for (int row = 0; row < nsample + 1; ++row)
+		for (int row = 0; row < sample_size + 1; ++row)
 		{
 			ofs_thetas << T * theta_sample[row][1] / pow(theta_sample[row][0],2) 
 				<< "\t" << theta_sample[row][1] << endl;
@@ -748,7 +760,7 @@ int main()
 	}
 	else
 	{
-		for (int row = 0; row < nsample; ++row)
+		for (int row = 0; row < sample_size; ++row)
 			ofs_energies << energies[row] << endl;
 	}
 	ofs_energies.close();
@@ -762,7 +774,7 @@ int main()
 	else
 	{
 		ofs_reject << (double)reject_counter_burnin/nsample_burnin*100 << " "
-			<< (double)reject_counter/nsample_eff*100 << endl;
+			<< (double)reject_counter/sample_size*100 << endl;
 	}
 	ofs_reject.close();
 	

@@ -1,4 +1,4 @@
-﻿Build started 02/11/2015 16:31:13.
+﻿Build started 03/11/2015 10:18:36.
      1>Project "C:\Users\ulzegasi\Cpp\Params_Inference_2\Params_Inference_2\Params_Inference_2.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
@@ -7,20 +7,20 @@
      1>main.cpp(355): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
      1>main.cpp(373): warning C4305: 'initializing' : truncation from '__int64' to 'size_t'
      1>main.cpp(373): warning C4309: 'initializing' : truncation of constant value
-     1>main.cpp(634): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(647): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(655): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
-     1>main.cpp(656): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
-     1>main.cpp(656): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>main.cpp(657): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
-     1>main.cpp(658): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
-     1>main.cpp(658): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>main.cpp(697): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(716): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(783): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(788): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(793): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\ulzegasi\cpp\params_inference_2\params_inference_2\main.cpp(765): warning C4723: potential divide by 0
+     1>main.cpp(646): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(659): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(667): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
+     1>main.cpp(668): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
+     1>main.cpp(668): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>main.cpp(669): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
+     1>main.cpp(670): warning C4244: 'argument' : conversion from 'double' to 'unsigned int', possible loss of data
+     1>main.cpp(670): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>main.cpp(709): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(728): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(795): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(800): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(805): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ulzegasi\cpp\params_inference_2\params_inference_2\main.cpp(777): warning C4723: potential divide by 0
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\ulzegasi\Cpp\Params_Inference_2\Debug\Params_Inference_2.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\ulzegasi\Cpp\Params_Inference_2\Debug\Params_Inference_2.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\ulzegasi\Cpp\Params_Inference_2\Debug\Params_Inference_2.lib" /MACHINE:X86 Debug\aVfun.obj
          Debug\main.obj
@@ -31,4 +31,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.29
+Time Elapsed 00:00:03.01
